@@ -1,5 +1,5 @@
 {
-  "name": "voicewave",
+  "name": "vozunimed",
   "version": "1.0.0",
   "description": "Projeto de transcrição de áudio usando Vosk",
   "main": "app.js",
