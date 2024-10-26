@@ -15,7 +15,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #B1D3AB; /* Utilizando o tom mais claro da paleta verde */
+            background-color: #B1D3AB;
             color: #1d1d1f;
         }
         .container {
@@ -29,22 +29,22 @@
             margin: 20px auto;
         }
         h1, h2 {
-            color: #004E4C; /* Verde mais escuro da paleta */
+            color: #004E4C;
         }
         input[type="file"] {
             margin-bottom: 20px;
             padding: 12px;
             width: 100%;
-            border: 2px solid #74C48A; /* Cor verde média da paleta */
+            border: 2px solid #74C48A;
             border-radius: 5px;
             transition: border-color 0.3s ease;
             cursor: pointer;
         }
         input[type="file"]:focus {
-            border-color: #004E4C; /* Verde mais escuro da paleta */
+            border-color: #004E4C;
         }
         button {
-            background-color: #004E4C; /* Verde mais escuro */
+            background-color: #004E4C;
             color: white;
             border: none;
             padding: 12px 20px;
@@ -54,12 +54,12 @@
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #006053; /* Um tom mais claro que o verde escuro */
+            background-color: #006053;
         }
         #transcription {
             margin-top: 20px;
             padding: 15px;
-            border: 1px solid #74C48A; /* Cor verde média da paleta */
+            border: 1px solid #74C48A;
             border-radius: 10px;
             background-color: #f5f5f7;
             font-size: 16px;
@@ -73,7 +73,7 @@
             width: 100%;
             text-align: center;
             padding: 10px;
-            background-color: #004E4C; /* Verde mais escuro da paleta */
+            background-color: #004E4C;
             color: #fff;
             position: fixed;
             bottom: 0;
@@ -82,7 +82,7 @@
         }
         .copy-button {
             margin-top: 10px;
-            background-color: #74C48A; /* Verde médio da paleta */
+            background-color: #74C48A;
             color: white;
             border: none;
             padding: 10px 15px;
@@ -110,7 +110,7 @@
             transition: width 0.4s ease;
         }
         .transcription-progress {
-            margin-top: 20px; /* Espaçamento da barra de progresso da transcrição */
+            margin-top: 20px;
             text-align: center;
         }
         .transcription-progress-status {
@@ -178,18 +178,19 @@
                 }
             };
 
+            xhr.onprogress = function (event) {
+                const newText = event.target.responseText;
+                transcriptionDiv.value = newText; // Atualiza o campo de transcrição conforme os dados chegam
+
+                const lines = newText.split('\n');
+                const totalLines = lines.length;
+                updateTranscriptionProgress((totalLines / 100) * 100); // Simula o progresso da transcrição
+            };
+
             xhr.onload = function () {
                 if (xhr.status === 200) {
-                    try {
-                        const result = JSON.parse(xhr.responseText);
-                        transcriptionDiv.value = result.transcription;
-                        progressStatus.innerText = "Transcrição concluída.";
-                        progressBar.style.width = '100%';
-                    } catch (error) {
-                        transcriptionDiv.value = 'Erro ao processar a resposta JSON.';
-                        progressStatus.innerText = "Erro ao processar a resposta.";
-                        console.error('Erro ao processar JSON:', error);
-                    }
+                    progressStatus.innerText = "Transcrição concluída!";
+                    progressBar.style.width = '100%';
                 } else {
                     transcriptionDiv.value = 'Erro na transcrição. Código de status: ' + xhr.status;
                     progressStatus.innerText = "Erro na transcrição.";
@@ -201,32 +202,17 @@
                 progressStatus.innerText = "Erro ao enviar a requisição.";
             };
 
-            // Atualização da barra de progresso da transcrição
-            const updateTranscriptionProgress = (progress) => {
-                transcriptionProgressBar.style.width = `${progress}%`;
-                transcriptionProgressStatus.innerText = `Progresso da Transcrição: ${Math.round(progress)}%`;
-            };
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    const result = JSON.parse(xhr.responseText);
-                    const transcriptionParts = result.transcription.split('\n');
-                    const totalParts = transcriptionParts.length;
-                    transcriptionParts.forEach((part, index) => {
-                        setTimeout(() => {
-                            transcriptionDiv.value += part + '\n';
-                            updateTranscriptionProgress(((index + 1) / totalParts) * 100);
-                        }, index * 1000); // Simula um delay para cada parte da transcrição
-                    });
-                }
-            };
-
             xhr.send(formData);
         });
 
+        function updateTranscriptionProgress(progress) {
+            transcriptionProgressBar.style.width = `${progress}%`;
+            transcriptionProgressStatus.innerText = `Progresso da Transcrição: ${Math.round(progress)}%`;
+        }
+
         function copyToClipboard() {
             transcriptionDiv.select();
-            transcriptionDiv.setSelectionRange(0, 99999);  // Para dispositivos móveis
+            transcriptionDiv.setSelectionRange(0, 99999);
             document.execCommand("copy");
             alert("Texto copiado para a área de transferência!");
         }
