@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcrição de Áudio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Inter var", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #B1D3AB; /* Utilizando o tom mais claro da paleta verde */
+            color: #1d1d1f;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            max-width: 600px;
+            width: 100%;
+            margin: 20px auto;
+        }
+        h1, h2 {
+            color: #004E4C; /* Verde mais escuro da paleta */
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+            padding: 12px;
+            width: 100%;
+            border: 2px solid #74C48A; /* Cor verde média da paleta */
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
+        input[type="file"]:focus {
+            border-color: #004E4C; /* Verde mais escuro da paleta */
+        }
+        button {
+            background-color: #004E4C; /* Verde mais escuro */
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #006053; /* Um tom mais claro que o verde escuro */
+        }
+        #transcription {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #74C48A; /* Cor verde média da paleta */
+            border-radius: 10px;
+            background-color: #f5f5f7;
+            font-size: 16px;
+            height: 300px;
+            width: 100%;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            resize: vertical;
+        }
+        .footer-bar {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #004E4C; /* Verde mais escuro da paleta */
+            color: #fff;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            backdrop-filter: blur(5px);
+        }
+        .copy-button {
+            margin-top: 10px;
+            background-color: #74C48A; /* Verde médio da paleta */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .progress-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 10px;
+        }
+        .progress {
+            height: 10px;
+            background-color: #74C48A;
+            width: 0;
+            transition: width 0.4s ease;
+        }
+        .transcription-progress {
+            margin-top: 20px; /* Espaçamento da barra de progresso da transcrição */
+            text-align: center;
+        }
+        .transcription-progress-status {
+            margin-top: 5px;
+            font-size: 16px;
+            color: #6e6e73;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Transcrição de Áudio</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="audioFile" name="audioFile" accept="audio/*">
+            <button type="submit">Enviar Áudio</button>
+        </form>
+        <div class="progress-container">
+            <div class="progress-status" id="progressStatus">Aguardando envio...</div>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <div class="transcription-progress">
+                <div class="transcription-progress-status" id="transcriptionProgressStatus">Transcrição em andamento...</div>
+                <div class="progress-bar">
+                    <div class="progress" id="transcriptionProgressBar"></div>
+                </div>
+            </div>
+        </div>
+        <h2>Texto Transcrito:</h2>
+        <textarea id="transcription" readonly></textarea>
+        <button class="copy-button" onclick="copyToClipboard()">Copiar Texto</button>
+    </div>
+    <div class="footer-bar">
+        Tecnologia da Informação Unimed Maranhão do Sul
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const transcriptionDiv = document.getElementById('transcription');
+        const progressBar = document.getElementById('progressBar');
+        const progressStatus = document.getElementById('progressStatus');
+        const transcriptionProgressBar = document.getElementById('transcriptionProgressBar');
+        const transcriptionProgressStatus = document.getElementById('transcriptionProgressStatus');
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files.length) {
+                alert("Por favor, selecione um arquivo de áudio.");
+                return;
+            }
+
+            formData.append('audioFile', fileInput.files[0]);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:3000/upload', true);
+
+            xhr.upload.onprogress = function (event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressStatus.innerText = `Carregando... ${Math.round(percentComplete)}%`;
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        transcriptionDiv.value = result.transcription;
+                        progressStatus.innerText = "Transcrição concluída.";
+                        progressBar.style.width = '100%';
+                    } catch (error) {
+                        transcriptionDiv.value = 'Erro ao processar a resposta JSON.';
+                        progressStatus.innerText = "Erro ao processar a resposta.";
+                        console.error('Erro ao processar JSON:', error);
+                    }
+                } else {
+                    transcriptionDiv.value = 'Erro na transcrição. Código de status: ' + xhr.status;
+                    progressStatus.innerText = "Erro na transcrição.";
+                }
+            };
+
+            xhr.onerror = function () {
+                transcriptionDiv.value = 'Erro ao enviar a requisição.';
+                progressStatus.innerText = "Erro ao enviar a requisição.";
+            };
+
+            // Atualização da barra de progresso da transcrição
+            const updateTranscriptionProgress = (progress) => {
+                transcriptionProgressBar.style.width = `${progress}%`;
+                transcriptionProgressStatus.innerText = `Progresso da Transcrição: ${Math.round(progress)}%`;
+            };
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const result = JSON.parse(xhr.responseText);
+                    const transcriptionParts = result.transcription.split('\n');
+                    const totalParts = transcriptionParts.length;
+                    transcriptionParts.forEach((part, index) => {
+                        setTimeout(() => {
+                            transcriptionDiv.value += part + '\n';
+                            updateTranscriptionProgress(((index + 1) / totalParts) * 100);
+                        }, index * 1000); // Simula um delay para cada parte da transcrição
+                    });
+                }
+            };
+
+            xhr.send(formData);
+        });
+
+        function copyToClipboard() {
+            transcriptionDiv.select();
+            transcriptionDiv.setSelectionRange(0, 99999);  // Para dispositivos móveis
+            document.execCommand("copy");
+            alert("Texto copiado para a área de transferência!");
+        }
+    </script>
+</body>
+</html>
