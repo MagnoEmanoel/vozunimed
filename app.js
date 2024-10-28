@@ -13,8 +13,8 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-// Caminho do modelo Vosk (mantido o caminho original, com nome alterado para "model")
-const MODEL_PATH = "C:/Users/magno/voicewave/models/model";
+// Caminho do modelo Vosk 
+const MODEL_PATH = "C:/Users/magno.emanoel/voicewave/models/model";
 let model;
 
 try {
@@ -34,7 +34,7 @@ app.use(cors());
 // Servir arquivos estáticos da pasta 'public'
 app.use(express.static('public'));
 
-// Função para converter o MP3 para WAV com taxa de amostragem de 8 kHz e aplicar redução de ruído com arnndn
+// converter o MP3 para WAV com taxa de amostragem de 8 kHz e aplicar redução de ruído com arnndn
 function convertToWav(inputPath, outputPath, callback) {
     ffmpeg(inputPath)
         .inputFormat('mp3')  // Confirma que o arquivo de entrada é MP3
